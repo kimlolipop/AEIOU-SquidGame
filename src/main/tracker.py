@@ -1,5 +1,5 @@
 import math
-
+import cv2
 
 class EuclideanDistTracker:
     def __init__(self):
