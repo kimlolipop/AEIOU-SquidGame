@@ -5,19 +5,26 @@ import numpy as np
 import torch
 import pandas as pd
 
-from src.main.tracker import *
 from src.main.sort import *
+'''
+    --> Function AEIOU_game ใช้สำหรับ logic เกมส์ flow chart คร่าวๆ
+    
+    
+    --> Function webcam_input ใช้สำหรับ control mode webcam และรับค่าจากกล้อง
+    --> Function Human_detection ใช้ detect คน + tracker
+    --> Function Subtraction ใช้ทำ Subtraction
+    
 
-model = torch.hub.load('ultralytics/yolov5', 'custom', path='./src/main/res/model/yolov5s6.pt')
-bgsub = cv2.createBackgroundSubtractorKNN(10)
-# tracker = EuclideanDistTracker() ## --> bad
-mot_tracker = Sort() ## --> Nice
+'''
+
+model = torch.hub.load('ultralytics/yolov5', 'custom', path='./src/main/res/model/yolov5s6.pt') # YoloV5 PRetrain
+bgsub = cv2.createBackgroundSubtractorKNN(10) 
+mot_tracker = Sort() ## --> realtime tracker
 
 
 def webcam_input():
     
-    
-    option = st.selectbox('Please Select Mode', ('non', 'Subtraction', 'Human_detection'))
+    option = st.selectbox('Please Select Mode', ('non', 'Subtraction', 'Human_detection', 'AEIOU_Game'))
     run = st.checkbox('Run')
     FRAME_WINDOW = st.image([])
     camera = cv2.VideoCapture(0)
@@ -26,7 +33,7 @@ def webcam_input():
     while run:     
         _, frame = camera.read()
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        
+        frame = cv2.GaussianBlur(frame,(5,5),0)
         # Display
         if option == 'non':
             pass
@@ -34,7 +41,9 @@ def webcam_input():
             frame = Subtraction(frame)         
         elif option == 'Human_detection':
             frame = Human_detection(frame)
-
+        elif option == 'AEIOU_Game':
+            pass
+            
         FRAME_WINDOW.image(frame)
             
     else:
@@ -42,8 +51,7 @@ def webcam_input():
 
 def Subtraction(frame):
     
-    blur = cv2.GaussianBlur(frame,(5,5),0)
-    subtraction = bgsub.apply(blur)
+    subtraction = bgsub.apply(frame)
     
     return subtraction
 
@@ -51,7 +59,6 @@ def Subtraction(frame):
 def Human_detection(frame, confidence = 0.6):
     
     # Detector
-    frame = cv2.GaussianBlur(frame,(5,5),0)
     detections = []
     results = model(frame)
     d = results.xyxy[0]
@@ -68,12 +75,12 @@ def Human_detection(frame, confidence = 0.6):
         y2 = int(df2[['y2']].iloc[i].values[0])
         detections.append([x1, y1, x2, y2])
     
-
+    
+    # Tracker by Sort
     try:
         boxes_ids = mot_tracker.update(np.array(detections))
         for box_id in boxes_ids:
             x1, y1, x2, y2, id = box_id
-            st.write(x1, y1, x2, y2, id)
             cv2.putText(frame, str(id), (int(x1), int(y1) - 15), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 2)
             cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 3)
 
@@ -81,8 +88,21 @@ def Human_detection(frame, confidence = 0.6):
         pass
         
     return frame
-    
-    
-    
 
 
+
+def AEIOU_game(frame):
+        
+    # Detect + sort
+    # ======Red Line --> ห้ามขยับ
+    # --> crop obj to subtrack 
+        # if move change object box color
+    # --> Action button for start Green line
+    
+    
+    # ======Green Line --> ขยับได้ Render เพลง AEIOU
+    # --> reset status
+    # --> Random select AEIOU music [แต่ละเพลงความยาวไม่เท่ากัน]
+
+    pass
+    
