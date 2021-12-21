@@ -17,7 +17,9 @@ from src.main.sort import *
 
 '''
 
-model = torch.hub.load('ultralytics/yolov5', 'custom', path='./src/main/res/model/yolov5s6.pt') # YoloV5 PRetrain
+# model = torch.hub.load('ultralytics/yolov5', 'custom', path='./res/model/yolov5s6.pt') # YoloV5 PRetrain
+model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
+print("model ", model)
 bgsub = cv2.createBackgroundSubtractorKNN(10) 
 mot_tracker = Sort() ## --> realtime tracker
 
