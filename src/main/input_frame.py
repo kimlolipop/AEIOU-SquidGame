@@ -30,7 +30,6 @@ def webcam_input():
     run = st.checkbox('Run')
     FRAME_WINDOW = st.image([])
     camera = cv2.VideoCapture(0)
-   
     
     while run:     
         _, frame = camera.read()

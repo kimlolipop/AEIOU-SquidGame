@@ -1,6 +1,5 @@
 from src.main import input_frame
 import streamlit as st
-# from src.main import input
 
 def run_main():
     audio_file = open('./src/main/res/sound/AEIOU.mp3', 'rb')
