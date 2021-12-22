@@ -1,11 +1,23 @@
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer
+
+from streamlit_webrtc import (
+    ClientSettings,
+    VideoProcessorBase,
+    webrtc_streamer,
+)
+
 import cv2
 import numpy as np
 import torch
 import pandas as pd
+import av
 
 from src.main.sort import *
+
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal  # type: ignore
 '''
     --> Function AEIOU_game ใช้สำหรับ logic เกมส์ flow chart คร่าวๆ
     
@@ -17,39 +29,59 @@ from src.main.sort import *
 
 '''
 
-# model = torch.hub.load('ultralytics/yolov5', 'custom', path='./res/model/yolov5s6.pt') # YoloV5 PRetrain
-model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
-print("model ", model)
+
+model = torch.hub.load('ultralytics/yolov5', 'custom', path='./src/main/projects/human_detection_Yolov5/model/yolov5s6.pt') # YoloV5 PRetrain
+
 bgsub = cv2.createBackgroundSubtractorKNN(10) 
 mot_tracker = Sort() ## --> realtime tracker
 
 
+# Setting for online connect
+WEBRTC_CLIENT_SETTINGS = ClientSettings(
+    rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+    media_stream_constraints={"video": True, "audio": False},
+)
+
+
 def webcam_input():
     
-    option = st.selectbox('Please Select Mode', ('non', 'Subtraction', 'Human_detection', 'AEIOU_Game'))
-    run = st.checkbox('Run')
-    FRAME_WINDOW = st.image([])
-    camera = cv2.VideoCapture(0)
-   
+    option = st.selectbox('Please Select Mode', ('non', 'Subtraction', 'Human_Detector', 'AEIOU_Game'))
     
-    while run:     
-        _, frame = camera.read()
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame = cv2.GaussianBlur(frame,(5,5),0)
-        # Display
-        if option == 'non':
-            pass
-        elif option == 'Subtraction':
-            frame = Subtraction(frame)         
-        elif option == 'Human_detection':
-            frame = Human_detection(frame)
-        elif option == 'AEIOU_Game':
-            pass
-            
-        FRAME_WINDOW.image(frame)
-            
-    else:
-        pass
+    class OpenCVVideoProcessor(VideoProcessorBase):
+        type: Literal["Default", "Subtraction", "Human_Detector", "Face_Detector"]
+
+        def __init__(self) -> None:
+            self.type = "Default"
+
+        def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
+            img = frame.to_ndarray(format="bgr24")
+
+            if self.type == "Default":
+                pass
+            elif self.type == "Human_Detector":
+                img = cv2.GaussianBlur(img,(5,5),0)
+                img = Human_detection(img)
+                
+            elif self.type == "Subtraction":
+                img = cv2.GaussianBlur(img,(5,5),0)
+                img = cv2.cvtColor(Subtraction(img),cv2.COLOR_GRAY2BGR)
+                
+                        
+            return av.VideoFrame.from_ndarray(img, format="bgr24")
+    
+ 
+    webrtc_ctx = webrtc_streamer(
+        key="opencv-filter",
+        client_settings=WEBRTC_CLIENT_SETTINGS,
+        video_processor_factory=OpenCVVideoProcessor,
+        media_stream_constraints={"video": True, "audio": False},
+        async_processing=True,
+    )
+    
+    if webrtc_ctx.video_processor:
+        webrtc_ctx.video_processor.type = option
+    
+    
 
 def Subtraction(frame):
     
