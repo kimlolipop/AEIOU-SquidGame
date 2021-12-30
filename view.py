@@ -5,6 +5,9 @@ from playsound import playsound
 from src.main import main
 from src.main import css
 
+
+
+    
 ### CSS_Style
 css.run_css()
 
@@ -24,7 +27,14 @@ st.markdown(
 
 
 ### Python Code
+# playsound('./src/main/res/sound/AEIOU.mp3')
+# greenline = st.button('greenline')
+# if greenline:
+#     playsound('./src/main/res/sound/AEIOU.mp3')
+#     greenline = False
+    
 run = main.run_main()
+
 
 
 
