@@ -39,7 +39,7 @@ if 'model' not in st.session_state:
     
 # model = torch.hub.load('ultralytics/yolov5', 'custom', path='./src/main/projects/human_detection_Yolov5/model/yolov5s6.pt') # YoloV5 PRetrain
 
-bgsub = cv2.createBackgroundSubtractorKNN(5) 
+bgsub = cv2.createBackgroundSubtractorKNN(1) 
 mot_tracker = Sort() ## --> realtime tracker
 
 
@@ -84,6 +84,7 @@ def webcam_input():
         elif option == 'AEIOU_Game':
             st.session_state.count += 1
             img = cv2.GaussianBlur(img,(5,5),0)
+            img = cv2.GaussianBlur(img,(5,5),0)
             img, id_dead = AEIOU_game(img, id_dead, st.session_state.count)
             
             try:
@@ -95,8 +96,11 @@ def webcam_input():
             # greenline = st.button('greenline')
             if greenline:
                 no = randrange(0, 10)
+                print(music_lst[no])
                 playsound(path + music_lst[no])
+                st.session_state.count = 0
                 greenline = False
+                
 
                 
                 
@@ -198,7 +202,7 @@ def AEIOU_game(frame, id_dead, count):
             flow_check = subtraction_crop.sum()
             print(flow_check)
             
-            if ((flow_check > 10079346) | (id in id_dead)) and count > 5:
+            if ((flow_check > 1579346) | (id in id_dead)) and count > 6:
                 
                 if id not in id_dead: # --> New ID
                     id_dead.append(id)
@@ -218,8 +222,8 @@ def AEIOU_game(frame, id_dead, count):
     frame_show = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     
     # cv2.imshow('detect', frame_show)
-    # cv2.imshow('Subtract', subtract)
-    # cv2.waitKey(25)
+    cv2.imshow('Subtract', subtract)
+    cv2.waitKey(25)
     
     
   
