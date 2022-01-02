@@ -36,9 +36,6 @@ except ImportError:
 if 'model' not in st.session_state:
     st.session_state.model = torch.hub.load('ultralytics/yolov5', 'custom', path='./src/main/projects/human_detection_Yolov5/model/yolov5s6.pt') 
     
-    
-# model = torch.hub.load('ultralytics/yolov5', 'custom', path='./src/main/projects/human_detection_Yolov5/model/yolov5s6.pt') # YoloV5 PRetrain
-
 bgsub = cv2.createBackgroundSubtractorKNN(1) 
 mot_tracker = Sort() ## --> realtime tracker
 
@@ -49,6 +46,7 @@ mot_tracker = Sort() ## --> realtime tracker
 #     rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
 #     media_stream_constraints={"video": True, "audio": False},
 # )
+
 def webcam_input():
     st.title("Webcam Live Feed")
     option = st.selectbox('Please Select Mode', ('non', 'Subtraction', 'Human_Detector', 'AEIOU_Game'))
@@ -61,7 +59,6 @@ def webcam_input():
     #setup AEIOU
     if 'count' not in st.session_state:
         st.session_state.count = 0
-    # count = 0
     id_dead = []
     music_lst = ['AEIOU_01.mp3','AEIOU_02.mp3','AEIOU_03.mp3','AEIOU_04.mp3','AEIOU_05.mp3','AEIOU_06.mp3','AEIOU_07.mp3','AEIOU_08.mp3','AEIOU_09.mp3','AEIOU_10.mp3']
     path = './src/main/res/sound/'
@@ -92,8 +89,7 @@ def webcam_input():
             except:
                 pass
             
-            # if greenline:
-            # greenline = st.button('greenline')
+
             if greenline:
                 no = randrange(0, 10)
                 print(music_lst[no])
@@ -107,7 +103,6 @@ def webcam_input():
                 
         FRAME_WINDOW.image(img)
     else:
-        # st.write('Stopped')
         pass
         
     cv2.destroyAllWindows()
@@ -168,6 +163,8 @@ def AEIOU_game(frame, id_dead, count):
     confidence =  0.6
     blue = (0,0,255)
     red = (255,0,0)
+    Threshold = 1579346
+    Delay_detect = 6
     
     # --> crop obj to subtrack 
     subtract = Subtraction(frame)
@@ -202,7 +199,7 @@ def AEIOU_game(frame, id_dead, count):
             flow_check = subtraction_crop.sum()
             print(flow_check)
             
-            if ((flow_check > 1579346) | (id in id_dead)) and count > 6:
+            if ((flow_check > Threshold) | (id in id_dead)) and count > Delay_detect:
                 
                 if id not in id_dead: # --> New ID
                     id_dead.append(id)
@@ -228,19 +225,9 @@ def AEIOU_game(frame, id_dead, count):
     
   
 
-
     
-    
-        # if move change object box color
-    # --> Action button for start Green line
-    
-    
-    # ======Green Line --> ขยับได้ Render เพลง AEIOU
-    # --> reset status
-    # --> Random select AEIOU music [แต่ละเพลงความยาวไม่เท่ากัน]
-
     return frame, id_dead
-    # frame
+
     
     
     
@@ -248,50 +235,50 @@ def AEIOU_game(frame, id_dead, count):
     
     
     
-def webcam_input2():
+# def webcam_input2():
     
-    option = st.selectbox('Please Select Mode', ('non', 'Subtraction', 'Human_Detector', 'AEIOU_Game'))
+#     option = st.selectbox('Please Select Mode', ('non', 'Subtraction', 'Human_Detector', 'AEIOU_Game'))
 
             
-    class OpenCVVideoProcessor(VideoProcessorBase,):
-        type: Literal["Default", "Subtraction", "Human_Detector", "Face_Detector"]
+#     class OpenCVVideoProcessor(VideoProcessorBase,):
+#         type: Literal["Default", "Subtraction", "Human_Detector", "Face_Detector"]
         
 
-        def __init__(self) -> None:
-            self.type = "Default"
+#         def __init__(self) -> None:
+#             self.type = "Default"
 
-        def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
-            img = frame.to_ndarray(format="bgr24")
+#         def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
+#             img = frame.to_ndarray(format="bgr24")
 
-            if self.type == "Default":
-                pass
-            elif self.type == "Human_Detector":
-                img = cv2.GaussianBlur(img,(5,5),0)
-                img = Human_detection(img)
+#             if self.type == "Default":
+#                 pass
+#             elif self.type == "Human_Detector":
+#                 img = cv2.GaussianBlur(img,(5,5),0)
+#                 img = Human_detection(img)
                 
-            elif self.type == "Subtraction":
-                img = cv2.GaussianBlur(img,(5,5),0)
-                img = cv2.cvtColor(Subtraction(img),cv2.COLOR_GRAY2BGR)
+#             elif self.type == "Subtraction":
+#                 img = cv2.GaussianBlur(img,(5,5),0)
+#                 img = cv2.cvtColor(Subtraction(img),cv2.COLOR_GRAY2BGR)
                 
-            elif self.type == 'AEIOU_Game':
-                img = cv2.GaussianBlur(img,(5,5),0)
-                img = AEIOU_game(img)
+#             elif self.type == 'AEIOU_Game':
+#                 img = cv2.GaussianBlur(img,(5,5),0)
+#                 img = AEIOU_game(img)
 
                 
              
-            return av.VideoFrame.from_ndarray(img, format="bgr24")
+#             return av.VideoFrame.from_ndarray(img, format="bgr24")
     
  
-    webrtc_ctx = webrtc_streamer(
-        key="opencv-filter",
-        # client_settings=WEBRTC_CLIENT_SETTINGS,
-        video_processor_factory=OpenCVVideoProcessor,
-        media_stream_constraints={"video": True, "audio": False},
-        async_processing=True,
-    )
+#     webrtc_ctx = webrtc_streamer(
+#         key="opencv-filter",
+#         # client_settings=WEBRTC_CLIENT_SETTINGS,
+#         video_processor_factory=OpenCVVideoProcessor,
+#         media_stream_constraints={"video": True, "audio": False},
+#         async_processing=True,
+#     )
     
     
-    if webrtc_ctx.video_processor:
-        webrtc_ctx.video_processor.type = option
+#     if webrtc_ctx.video_processor:
+#         webrtc_ctx.video_processor.type = option
         
-    cv2.destroyAllWindows()
+#     cv2.destroyAllWindows()
